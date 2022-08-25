@@ -1,0 +1,291 @@
+---
+title: "NDC_Analysis"
+author: "sid"
+date: "8/25/2022"
+output: html_document
+---
+
+```{r}
+library(pdftools)
+library(dplyr)
+library(tm)
+library(readr)
+library(stringr)
+library(tidytext)
+library(ggplot2)
+library(cowplot)
+library(tidyr)
+library(scales)
+```
+
+Reading and cleaning the NDC data, and cleaning them a bit
+```{r, echo=FALSE, warning=FALSE, include=FALSE}
+#reading pdf and converting the text one line per row (India's NDC)
+txt_india <- pdf_text("INDIA INDC TO UNFCCC.pdf") %>% 
+  read_lines()
+
+str(txt_india)
+
+#converting the character vector into a tibble
+txt_indiadf <- tibble(line=1:1399, text=txt_india)
+
+#adding NAs to the blank rows
+txt_indiadf[txt_indiadf==""] <- NA
+
+#removing rows with NAs
+txt_indiadf <- txt_indiadf %>% 
+  na.omit() 
+
+#removing rows with Sanskrit language
+txt_indiadf <- txt_indiadf[-c(3:6),] 
+
+#removing rows with page number
+txt_indiadf <- txt_indiadf %>% 
+  filter(!grepl("Page", text)) 
+
+#adding a column with index number
+txt_indiadf$linenumber <- 1:nrow(txt_indiadf)
+
+#moving the index number column to the start
+txt_indiadf <- txt_indiadf %>% 
+  select(-line) %>% 
+  relocate(linenumber, .before = text) 
+
+#converting every letter to lower case
+txt_indiadf$text <- str_to_lower(txt_indiadf$text)
+
+#addin a column
+txt_indiadf$country <- "india_ndc"
+
+
+
+
+```
+
+
+Reading and cleaning the NDCs for G8 countries:
+
+Reading US NDC.
+
+```{r, include=FALSE}
+
+
+#reading the US NDC------------
+txt_US <- pdf_text("United States NDC April 21 2021 Final.pdf") %>% 
+  read_lines()
+
+str(txt_US)
+
+#converting the character vector into a tibble
+txt_USdf <- tibble(line=1:778, text=txt_US)
+
+#adding NAs to the blank rows
+txt_USdf[txt_USdf==""] <- NA
+
+#removing rows with NAs
+txt_USdf <- txt_USdf %>% 
+  na.omit() 
+
+txt_USdf <- txt_USdf[-8,]
+
+
+#adding a column with index number
+txt_USdf$linenumber <- 1:nrow(txt_USdf)
+
+#moving the index number column to the start
+txt_USdf <- txt_USdf%>% 
+  select(-line) %>% 
+  relocate(linenumber, .before = text) 
+
+#converting every letter to lower case
+txt_USdf$text <- str_to_lower(txt_USdf$text)
+
+#addin a column
+txt_USdf$country <- "US_ndc"
+
+```
+
+Reading the NDC of France, italy and germany as EU. As all the Eu countries submitted a combined NDC under the EU banner:
+
+```{r, include=FALSE}
+#reading the NDC------------
+txt_EU <- pdf_text("EU_NDC_Submission_December 2020.pdf") %>% 
+  read_lines()
+
+str(txt_EU)
+
+#converting the character vector into a tibble
+txt_EUdf <- tibble(line=1:774, text=txt_EU)
+
+
+#adding NAs to the blank rows
+txt_EUdf[txt_EUdf==""] <- NA
+
+#removing rows with NAs
+txt_EUdf <- txt_EUdf %>% 
+  na.omit() 
+
+#removing rows with numbers
+txt_EUdf <- txt_EUdf %>% 
+  filter(!grepl("\\d+$", text))
+
+#adding a column with index number
+txt_EUdf$linenumber <- 1:nrow(txt_EUdf)
+
+#moving the index number column to the start
+txt_EUdf <- txt_EUdf %>% 
+  select(-line) %>% 
+  relocate(linenumber, .before = text) 
+
+#converting every letter to lower case
+txt_EUdf$text <- str_to_lower(txt_EUdf$text)
+
+#addin a column
+txt_EUdf$country <- "eu_ndc"
+
+```
+
+Reading UK's NDC
+
+```{r, include=FALSE}
+
+#reading the NDC------------
+txt_UK <- pdf_text("UK Nationally Determined Contribution.pdf") %>% 
+  read_lines()
+
+str(txt_UK)
+
+#converting the character vector into a tibble
+txt_UKdf <- tibble(line=1:1019, text=txt_UK)
+
+#removing the copyright rows
+txt_UKdf <- txt_UKdf[-c(5:16),] 
+
+#adding NAs to the blank rows
+txt_UKdf[txt_UKdf==""] <- NA
+
+#removing rows with NAs
+txt_UKdf <- txt_UKdf %>% 
+  na.omit() 
+
+#removing rows with numbers
+txt_UKdf  <- txt_UKdf %>% 
+  filter(!grepl("\\d+$", text))
+
+
+#adding a column with index number
+txt_UKdf$linenumber <- 1:nrow(txt_UKdf)
+
+#moving the index number column to the start
+txt_UKdf <- txt_UKdf %>% 
+  select(-line) %>% 
+  relocate(linenumber, .before = text) 
+
+#converting every letter to lower case
+txt_UKdf$text <- str_to_lower(txt_UKdf$text)
+
+#addin a column
+txt_UKdf$country <- "uk_ndc"
+
+```
+
+Reading Australia's NDC.
+
+```{r, include=FALSE}
+
+#reading the NDC------------
+txt_AUS <- pdf_text("Australias NDC June 2022 Update (3).pdf") %>% 
+  read_lines()
+
+str(txt_AUS)
+
+#converting the character vector into a tibble
+txt_AUSdf <- tibble(line=1:508, text=txt_AUS)
+
+#removing the copyright rows
+txt_AUSdf <- txt_AUSdf[-c(4:48),] 
+
+#adding NAs to the blank rows
+txt_AUSdf[txt_AUSdf==""] <- NA
+
+#removing rows with NAs
+txt_AUSdf <- txt_AUSdf %>% 
+  na.omit() 
+
+#removing rows with just numbers
+txt_AUSdf  <- txt_AUSdf %>% 
+  filter(!grepl("\\d+$", text))
+
+#adding a column with index number
+txt_AUSdf$linenumber <- 1:nrow(txt_AUSdf)
+
+#moving the index number column to the start
+txt_AUSdf <- txt_AUSdf %>% 
+  select(-line) %>% 
+  relocate(linenumber, .before = text) 
+
+#converting every letter to lower case
+txt_AUSdf$text <- str_to_lower(txt_AUSdf$text)
+
+#addin a column
+txt_AUSdf$country <- "aus_ndc"
+
+```
+
+
+Reading South Korea's NDC
+
+```{r, include=FALSE}
+#reading the NDC------------
+txt_KOR <- pdf_text("211223_The Republic of Korea's NDC.pdf") %>% 
+  read_lines()
+
+str(txt_KOR)
+
+#converting the character vector into a tibble
+txt_KORdf <- tibble(line=1:980, text=txt_KOR)
+
+#adding NAs to the blank rows
+txt_KORdf[txt_KORdf==""] <- NA
+
+#removing rows with NAs
+txt_KORdf <- txt_KORdf %>% 
+  na.omit() 
+
+#removing rows with just numbers
+txt_KORdf <- txt_KORdf %>% 
+  filter(!grepl("\\d+$", text))
+
+#adding a column with index number
+txt_KORdf$linenumber <- 1:nrow(txt_KORdf)
+
+#moving the index number column to the start
+txt_KORdf <- txt_KORdf%>% 
+  select(-line) %>% 
+  relocate(linenumber, .before = text) 
+
+#converting every letter to lower case
+txt_KORdf$text <- str_to_lower(txt_KORdf$text)
+
+#addin a column
+txt_KORdf$country <- "kor_ndc"
+
+```
+
+
+Reading Canada's NDC.
+
+```{r, include=FALSE}
+
+
+```
+
+
+
+Combining different NDC dataframes.
+
+```{r}
+
+rbind(txt_indiadf, txt_USdf) %>% View()
+```
+
