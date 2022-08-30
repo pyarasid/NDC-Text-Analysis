@@ -16,52 +16,10 @@ library(ggplot2)
 library(cowplot)
 library(tidyr)
 library(scales)
+library(forcats)
 ```
 
-Reading and cleaning the NDC data, and cleaning them a bit
-```{r, echo=FALSE, warning=FALSE, include=FALSE}
-#reading pdf and converting the text one line per row (India's NDC)
-txt_india <- pdf_text("INDIA INDC TO UNFCCC.pdf") %>% 
-  read_lines()
-
-str(txt_india)
-
-#converting the character vector into a tibble
-txt_indiadf <- tibble(line=1:1399, text=txt_india)
-
-#adding NAs to the blank rows
-txt_indiadf[txt_indiadf==""] <- NA
-
-#removing rows with NAs
-txt_indiadf <- txt_indiadf %>% 
-  na.omit() 
-
-#removing rows with Sanskrit language
-txt_indiadf <- txt_indiadf[-c(3:6),] 
-
-#removing rows with page number
-txt_indiadf <- txt_indiadf %>% 
-  filter(!grepl("Page", text)) 
-
-#adding a column with index number
-txt_indiadf$linenumber <- 1:nrow(txt_indiadf)
-
-#moving the index number column to the start
-txt_indiadf <- txt_indiadf %>% 
-  select(-line) %>% 
-  relocate(linenumber, .before = text) 
-
-#converting every letter to lower case
-txt_indiadf$text <- str_to_lower(txt_indiadf$text)
-
-#addin a column
-txt_indiadf$country <- "india_ndc"
-
-
-
-
-```
-
+Reading and cleaning the NDC data, and cleaning it.
 
 Reading and cleaning the NDCs for G8 countries:
 
@@ -101,7 +59,10 @@ txt_USdf <- txt_USdf%>%
 txt_USdf$text <- str_to_lower(txt_USdf$text)
 
 #addin a column
-txt_USdf$country <- "US_ndc"
+txt_USdf$country <- "US"
+
+#adding grouping column
+txt_USdf$grouping <- "G8"
 
 ```
 
@@ -141,11 +102,14 @@ txt_EUdf <- txt_EUdf %>%
 txt_EUdf$text <- str_to_lower(txt_EUdf$text)
 
 #addin a column
-txt_EUdf$country <- "eu_ndc"
+txt_EUdf$country <- "EU"
+
+#adding grouping column
+txt_EUdf$grouping <- "G8"
 
 ```
 
-Reading UK's NDC
+Reading UK's NDC.
 
 ```{r, include=FALSE}
 
@@ -185,7 +149,10 @@ txt_UKdf <- txt_UKdf %>%
 txt_UKdf$text <- str_to_lower(txt_UKdf$text)
 
 #addin a column
-txt_UKdf$country <- "uk_ndc"
+txt_UKdf$country <- "UK"
+
+#adding grouping column
+txt_UKdf$grouping <- "G8"
 
 ```
 
@@ -228,7 +195,10 @@ txt_AUSdf <- txt_AUSdf %>%
 txt_AUSdf$text <- str_to_lower(txt_AUSdf$text)
 
 #addin a column
-txt_AUSdf$country <- "aus_ndc"
+txt_AUSdf$country <- "Australia"
+
+#adding grouping column
+txt_AUSdf$grouping <- "G8"
 
 ```
 
@@ -268,7 +238,10 @@ txt_KORdf <- txt_KORdf%>%
 txt_KORdf$text <- str_to_lower(txt_KORdf$text)
 
 #addin a column
-txt_KORdf$country <- "kor_ndc"
+txt_KORdf$country <- "South Korea"
+
+#adding grouping column
+txt_KORdf$grouping <- "G8"
 
 ```
 
@@ -276,16 +249,560 @@ txt_KORdf$country <- "kor_ndc"
 Reading Canada's NDC.
 
 ```{r, include=FALSE}
+#reading the NDC------------
+txt_CAN <- pdf_text("Canada's Enhanced NDC Submission1_FINAL EN.pdf") %>% 
+  read_lines()
 
+str(txt_CAN)
+
+#converting the character vector into a tibble
+txt_CANdf <- tibble(line=1:1810, text=txt_CAN)
+
+#adding NAs to the blank rows
+txt_CANdf[txt_CANdf==""] <- NA
+
+#removing rows with NAs
+txt_CANdf <- txt_CANdf %>% 
+  na.omit() 
+
+#removing rows with just numbers
+txt_CANdf <- txt_CANdf %>% 
+  filter(!grepl("\\d+$", text))
+
+#adding a column with index number
+txt_CANdf$linenumber <- 1:nrow(txt_CANdf)
+
+#moving the index number column to the start
+txt_CANdf <- txt_CANdf%>% 
+  select(-line) %>% 
+  relocate(linenumber, .before = text) 
+
+#converting every letter to lower case
+txt_CANdf$text <- str_to_lower(txt_CANdf$text)
+
+#addin a column
+txt_CANdf$country <- "Canada"
+
+#adding grouping column
+txt_CANdf$grouping <- "G8"
+
+```
+
+Reading Japan's NDC.
+
+```{r, include=FALSE}
+#reading the NDC------------
+txt_JAP <- pdf_text("JAPAN_FIRST NDC (UPDATED SUBMISSION).pdf") %>% 
+  read_lines()
+
+str(txt_JAP)
+
+#converting the character vector into a tibble
+txt_JAPdf <- tibble(line=1:404, text=txt_JAP)
+
+#adding NAs to the blank rows
+txt_JAPdf[txt_JAPdf==""] <- NA
+
+#removing rows with NAs
+txt_JAPdf <- txt_JAPdf %>% 
+  na.omit() 
+
+#removing rows with just numbers
+txt_JAPdf <- txt_JAPdf %>% 
+  filter(!grepl("\\d+$", text))
+
+#adding a column with index number
+txt_JAPdf$linenumber <- 1:nrow(txt_JAPdf)
+
+#moving the index number column to the start
+txt_JAPdf <- txt_JAPdf%>% 
+  select(-line) %>% 
+  relocate(linenumber, .before = text) 
+
+#converting every letter to lower case
+txt_JAPdf$text <- str_to_lower(txt_JAPdf$text)
+
+#addin a column
+txt_JAPdf$country <- "Japan"
+
+#adding grouping column
+txt_JAPdf$grouping <- "G8"
+
+```
+
+Reading developing countries NDCs:
+
+Reading India's NDC.
+
+```{r, echo=FALSE, warning=FALSE, include=FALSE}
+#reading pdf and converting the text one line per row (India's NDC)
+txt_india <- pdf_text("INDIA INDC TO UNFCCC.pdf") %>% 
+  read_lines()
+
+str(txt_india)
+
+#converting the character vector into a tibble
+txt_indiadf <- tibble(line=1:1399, text=txt_india)
+
+#adding NAs to the blank rows
+txt_indiadf[txt_indiadf==""] <- NA
+
+#removing rows with NAs
+txt_indiadf <- txt_indiadf %>% 
+  na.omit() 
+
+#removing rows with Sanskrit language
+txt_indiadf <- txt_indiadf[-c(3:6),] 
+
+#removing rows with page number
+txt_indiadf <- txt_indiadf %>% 
+  filter(!grepl("Page", text)) 
+
+#adding a column with index number
+txt_indiadf$linenumber <- 1:nrow(txt_indiadf)
+
+#moving the index number column to the start
+txt_indiadf <- txt_indiadf %>% 
+  select(-line) %>% 
+  relocate(linenumber, .before = text) 
+
+#converting every letter to lower case
+txt_indiadf$text <- str_to_lower(txt_indiadf$text)
+
+#addin a column
+txt_indiadf$country <- "India"
+
+#adding grouping column
+txt_indiadf$grouping <- "G20-G8"
 
 ```
 
 
+Reading Bangladesh NDC.
 
-Combining different NDC dataframes.
+```{r, include=FALSE}
+#reading the NDC------------
+txt_BAN <- pdf_text("Bangladesh_NDC_submission_20210826revised (11).pdf") %>% 
+  read_lines()
+
+str(txt_BAN)
+
+#converting the character vector into a tibble
+txt_BANdf <- tibble(line=1:1488, text=txt_BAN)
+
+#drop not necessary rows
+txt_BANdf <- txt_BANdf[-c(1:17),] 
+
+#adding NAs to the blank rows
+txt_BANdf[txt_BANdf==""] <- NA
+
+#removing rows with NAs
+txt_BANdf <- txt_BANdf %>% 
+  na.omit() 
+
+#removing rows with just numbers
+txt_BANdf<- txt_BANdf %>% 
+  filter(!grepl("\\d+$", text))
+
+#adding a column with index number
+txt_BANdf$linenumber <- 1:nrow(txt_BANdf)
+
+#moving the index number column to the start
+txt_BANdf <- txt_BANdf%>% 
+  select(-line) %>% 
+  relocate(linenumber, .before = text) 
+
+#converting every letter to lower case
+txt_BANdf$text <- str_to_lower(txt_BANdf$text)
+
+#addin a column
+txt_BANdf$country <- "Bangladesh"
+
+#adding grouping column
+txt_BANdf$grouping <- "G20-G8"
+
+```
+
+Reading Brazil's NDC.
+
+```{r, include=FALSE}
+#reading the NDC------------
+txt_BRA <- pdf_text("Brazil_Updated - First NDC -  FINAL - PDF.pdf") %>% 
+  read_lines()
+
+str(txt_BRA)
+
+#converting the character vector into a tibble
+txt_BRAdf <- tibble(line=1:462, text=txt_BRA)
+
+#removing some rows
+txt_BRAdf <- txt_BRAdf[-c(1:7),] 
+
+#adding NAs to the blank rows
+txt_BRAdf[txt_BRAdf==""] <- NA
+
+#removing rows with NAs
+txt_BRAdf <- txt_BRAdf %>% 
+  na.omit() 
+
+#removing rows with just numbers
+txt_BRAdf<- txt_BRAdf %>% 
+  filter(!grepl("\\d+$", text))
+
+#adding a column with index number
+txt_BRAdf$linenumber <- 1:nrow(txt_BRAdf)
+
+#moving the index number column to the start
+txt_BRAdf <- txt_BRAdf%>% 
+  select(-line) %>% 
+  relocate(linenumber, .before = text) 
+
+#converting every letter to lower case
+txt_BRAdf$text <- str_to_lower(txt_BRAdf$text)
+
+#addin a column
+txt_BRAdf$country <- "Brazil"
+
+#adding grouping column
+txt_BRAdf$grouping <- "G20-G8"
+
+```
+
+
+Reading Egyptian INDC.
+
+```{r, include=FALSE}
+#reading the NDC------------
+txt_EGP <- pdf_text("Egyptian INDC.pdf") %>% 
+  read_lines()
+
+str(txt_EGP)
+
+#converting the character vector into a tibble
+txt_EGPdf <- tibble(line=1:563, text=txt_EGP)
+
+#removing some rows
+txt_EGPdf <- txt_EGPdf[-c(1:8),] 
+
+#adding NAs to the blank rows
+txt_EGPdf [txt_EGPdf ==""] <- NA
+
+#removing rows with NAs
+txt_EGPdf  <- txt_EGPdf  %>% 
+  na.omit()
+
+#removing rows with just numbers
+txt_EGPdf<- txt_EGPdf %>% 
+  filter(!grepl("\\d+$", text))
+
+#adding a column with index number
+txt_EGPdf$linenumber <- 1:nrow(txt_EGPdf)
+
+#moving the index number column to the start
+txt_EGPdf<- txt_EGPdf%>% 
+  select(-line) %>% 
+  relocate(linenumber, .before = text) 
+
+#converting every letter to lower case
+txt_EGPdf$text <- str_to_lower(txt_EGPdf$text)
+
+#addin a column
+txt_EGPdf$country <- "Egypt"
+
+#adding grouping column
+txt_EGPdf$grouping <- "G20-G8"
+
+```
+
+Reading Saudi Arabia's NDC.
+
+```{r, include=FALSE}
+#reading the NDC------------
+txt_SUD <- pdf_text("Saudi_arabia_NDC 2021.pdf") %>% 
+  read_lines()
+
+str(txt_SUD)
+
+#converting the character vector into a tibble
+txt_SUDdf <- tibble(line=1:524, text=txt_SUD)
+
+#removing some rows
+txt_SUDdf <- txt_SUDdf[-c(1:15),] 
+
+#adding NAs to the blank rows
+txt_SUDdf [txt_SUDdf ==""] <- NA
+
+#removing rows with NAs
+txt_SUDdf   <- txt_SUDdf  %>% 
+  na.omit()
+
+#removing rows with just numbers
+txt_SUDdf<- txt_SUDdf %>% 
+  filter(!grepl("\\d+$", text))
+
+#adding a column with index number
+txt_SUDdf$linenumber <- 1:nrow(txt_SUDdf)
+
+#moving the index number column to the start
+txt_SUDdf<- txt_SUDdf%>% 
+  select(-line) %>% 
+  relocate(linenumber, .before = text) 
+
+#converting every letter to lower case
+txt_SUDdf$text <- str_to_lower(txt_SUDdf$text)
+
+#addin a column
+txt_SUDdf$country <- "Saudi Arabia"
+
+#adding grouping column
+txt_SUDdf$grouping <- "G20-G8"
+
+
+```
+
+Reading South Africa's NDC.
+
+```{r, include=FALSE}
+#reading the NDC------------
+txt_SA <- pdf_text("South Africa updated first NDC September 2021.pdf") %>% 
+  read_lines()
+
+str(txt_SA)
+
+#converting the character vector into a tibble
+txt_SAdf <- tibble(line=1:1271, text=txt_SA)
+
+#Removing some rows
+txt_SAdf <- txt_SAdf[-c(1:45),] 
+
+#adding NAs to the blank rows
+txt_SAdf [txt_SAdf ==""] <- NA
+
+#removing rows with NAs
+txt_SAdf   <- txt_SAdf  %>% 
+  na.omit()
+
+#removing rows with just numbers
+txt_SAdf <- txt_SAdf  %>% 
+  filter(!grepl("\\d+$", text))
+
+#adding a column with index number
+txt_SAdf$linenumber <- 1:nrow(txt_SAdf)
+
+#moving the index number column to the start
+txt_SAdf<- txt_SAdf%>% 
+  select(-line) %>% 
+  relocate(linenumber, .before = text) 
+
+#converting every letter to lower case
+txt_SAdf$text <- str_to_lower(txt_SAdf$text)
+
+#addin a column
+txt_SAdf$country <- "South Africa"
+
+#adding grouping column
+txt_SAdf$grouping <- "G20-G8"
+
+
+```
+
+Reading Turkey NDC.
+
+```{r, include=FALSE}
+#reading the NDC------------
+txt_TUR <- pdf_text("The_INDC_of_TURKEY_v.15.19.30.pdf") %>% 
+  read_lines()
+
+str(txt_TUR)
+
+#converting the character vector into a tibble
+txt_TURdf <- tibble(line=1:224, text=txt_TUR)
+
+#removing some rows
+txt_TURdf <- txt_TURdf[-c(1:5),] 
+
+#adding NAs to the blank rows
+txt_TURdf [txt_TURdf  ==""] <- NA
+
+#removing rows with NAs
+txt_TURdf <- txt_TURdf   %>% 
+  na.omit()
+
+#removing rows with just numbers
+txt_TURdf <- txt_TURdf  %>% 
+  filter(!grepl("\\d+$", text))
+
+#adding a column with index number
+txt_TURdf$linenumber <- 1:nrow(txt_TURdf)
+
+#moving the index number column to the start
+txt_TURdf<- txt_TURdf%>% 
+  select(-line) %>% 
+  relocate(linenumber, .before = text) 
+
+#converting every letter to lower case
+txt_TURdf$text <- str_to_lower(txt_TURdf$text)
+
+#addin a column
+txt_TURdf$country <- "Turkey"
+
+#adding grouping column
+txt_TURdf$grouping <- "G20-G8"
+
+```
+
+Reading Indonesia's NDC.
+
+```{r, include=FALSE}
+#reading the NDC------------
+txt_IDN <- pdf_text("Updated NDC Indonesia 2021 - corrected version.pdf") %>% 
+  read_lines()
+
+str(txt_IDN)
+
+#converting the character vector into a tibble
+txt_IDNdf <- tibble(line=1:1650, text=txt_IDN)
+
+#removing some rows
+txt_IDNdf <- txt_IDNdf[-c(1:147),]
+
+#adding NAs to the blank rows
+txt_IDNdf [txt_IDNdf  ==""] <- NA
+
+#removing rows with NAs
+txt_IDNdf <- txt_IDNdf %>% 
+  na.omit()
+
+#removing rows with just numbers
+txt_IDNdf <- txt_IDNdf  %>% 
+  filter(!grepl("\\d+$", text))
+
+#adding a column with index number
+txt_IDNdf$linenumber <- 1:nrow(txt_IDNdf)
+
+#moving the index number column to the start
+txt_IDNdf<- txt_IDNdf%>% 
+  select(-line) %>% 
+  relocate(linenumber, .before = text) 
+
+#converting every letter to lower case
+txt_IDNdf$text <- str_to_lower(txt_IDNdf$text)
+
+#addin a column
+txt_IDNdf$country <- "Indonesia"
+
+#adding grouping column
+txt_IDNdf$grouping <- "G20-G8"
+
+```
+
+
+Combining all the NDC data frames for G8 and G20 nations.
+
+```{r, include=FALSE}
+
+combined_NDC <- rbind(txt_USdf, txt_EUdf, txt_UKdf, txt_AUSdf, txt_KORdf, txt_CANdf, txt_JAPdf,
+      txt_indiadf, txt_BANdf, txt_BRAdf, txt_EGPdf, txt_SUDdf, txt_SAdf, txt_TURdf, txt_IDNdf)
+
+
+```
+
+Conducting analysis using one-gram.
+
+Tokenizing the corpus (one word) and drawing the top 30 words for the country.
+```{r}
+remove_words <- c("canada", "uk", "eu", "india", "european", "uk’s", "canada’s", "uk’s", "africa", "korea", "indonesia", "africa’s", "bangladesh", "australia’s", "scotland", "brazil", "saudi", "australia", "canadian", "african", "south",
+                  "egypt", "korean", "turkey", "www.legislation.gov.uk", "egyptian", "canadians", "indonesia’s", 
+                  "ireland", "korea’s", "india’s", "mw", "ha", "km", "gw", "eu's", "srn", "inr", "ccc", "alberta", "wales", "welsh", "scottish", "australian", "japan's", "inuit", "www.gov.scot", "japan", "kingdom",
+                  "scotland's", "gn", "scp", "ec", "pcf", "www.gov.uk", "gba", "gpg", "https", "net", "million")
+
+
+combined_NDC %>% 
+  unnest_tokens(word, text) %>%
+  anti_join(stop_words) %>% 
+  filter(!str_detect(word, "\\d")) %>% 
+    filter(!word%in%remove_words) %>% 
+  count(country, word, sort=T) %>% 
+ 
+  group_by(country) %>%
+  slice_max(n, n=10) %>%
+  ungroup() %>% 
+  mutate(country=as.factor(country),
+         word=reorder_within(word, n, country)) %>% 
+  ggplot(aes(n, word,n))+
+  geom_col()+
+  facet_wrap(~country, scales="free")+
+  scale_y_reordered() +
+  labs(y=NULL)
+
+```
+Above chart shows the the term frequency of top 10 words in each countries NDC. Note that we have removed some words which do not provide any interesting information like names of countries, etc.
+
+Some observations from the term-frequency of words in the NDCs of different countries:
+
+* Countries like India, Indonesia, Egypt, Saudi Arabia focused on Development. 
+* Majority of the developing countries like Brazil, Egypt, Indonesia, and South Africa had high frequency of adaptation in their NDCs showing the increased focus of developing countries (i.e. G20-G8) countries on adaptation.
+* None of the G8 countries had adaptation as their top 10 frequency words.
+* The focus of G8 countries is on mitigation as countries like Canada, US, South Korea, and Japanhad GHG or carbin as their top 10 high frequency words. 
+* Different countries have different sector focus and different emphasis on different sectors. We assume that higher the frequency of mention of certain sector, high is the focus on that sector. Energy was the focus of NDCs for most countries in the g8 and G20-G8. 
+* India, Egypt and Saudi Arabia also had strong focus on water sector in their NDCs. 
+
+
+Tokenizing the corpus (one word) and drawing the top 30 words for the grouping
+
+```{r}
+combined_NDC %>% 
+  unnest_tokens(word, text) %>%
+  anti_join(stop_words) %>% 
+  filter(!str_detect(word, "\\d")) %>% 
+  filter(!word%in%remove_words) %>% 
+  count(grouping, word, sort=T) %>% 
+  group_by(grouping) %>%
+  slice_max(n, n=40) %>%
+  ungroup() %>% 
+  mutate(grouping=as.factor(grouping),
+         word=reorder_within(word, n, grouping)) %>% 
+  ggplot(aes(n, word,n, fill=grouping))+
+  geom_col()+
+  facet_wrap(~grouping, scales="free")+
+  scale_y_reordered() +
+  labs(y=NULL)
+```
+In the above chart we looked at the frequency of words in the combined G8 and G20-G8 countries. Based on the above chart, we make the following observations:
+
+* There is clear difference in the focus of G8 and G20-G8 countries based on the analysis of their NDCs.
+* We looked at the top 40 high frequency words in both G8 and G20-G8 countries and found that G20-G8 countries have strong focus on development, and adaptation.
+* G20-G8 countries also focus on sectors like water, waste and technology. These countries also mention words like capacity and support which means that these countries also focus on capacity building in the sector and need for support to achieve their goals.
+* Sustainability and efficiency also gets mentioned a lot of times in G20-G8 countries NDCs. 
+* On contrary, G8 countries do not have strong focus on any of these areas. They have high focus on GHG emissions, and reduction. Although both G* and G20-G8 have strong focus on energy sector. 
+
+**Calculating at tf-idf.**
+
+The statistic tf-idf is intended to measure how important a word is to a document in a collection (or corpus) of documents, for example, to one novel in a collection of novels or to one website in a collection of websites. 
 
 ```{r}
 
-rbind(txt_indiadf, txt_USdf) %>% View()
+remove_words <- c("canada", "uk", "india", "uk’s", "canada’s", "uk’s", "africa", "korea", "indonesia", "africa’s", 
+                  "bangladesh", "australia’s", "scotland", "brazil", "saudi", "australia", "canadian", "african",
+                  "egypt", "korean", "turkey", "www.legislation.gov.uk", "egyptian", "canadians", "indonesia’s", 
+                  "ireland", "korea’s", "india’s", "mw", "ha", "km", "gw", "eu's", "srn", "inr", "ccc", "alberta", "wales", "welsh", "scottish", "australian", "japan's", "inuit", "www.gov.scot",
+                  "scotland's", "gn", "scp", "ec", "pcf", "www.gov.uk", "gba", "gpg")
+
+combined_NDC %>% 
+  unnest_tokens(word, text) %>%
+  anti_join(stop_words) %>% 
+  filter(!word%in%remove_words) %>% 
+  filter(!str_detect(word, "\\d")) %>% 
+  count(grouping, word, sort=T) %>% 
+  bind_tf_idf(word, grouping, n) %>% 
+  #arrange(desc(tf_idf)) %>% 
+  group_by(grouping) %>%
+  slice_max(tf_idf, n = 50) %>%
+  ungroup() %>%
+  ggplot(aes(tf_idf, fct_reorder(word, tf_idf), fill = grouping)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~grouping, ncol = 2, scales = "free") +
+  labs(x = "tf-idf", y = NULL)
+
 ```
 
