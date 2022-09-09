@@ -146,8 +146,8 @@ plot_grid(p1, p2, labels = c("India", "US"),
           hjust = -0.5, vjust = -0.5)
 
 #binding the India and Us dataframe
-frequency <- bind_rows(txt_token, txt_tokenUS) %>% 
-  count(country, word) %>% 
+frequency <- bind_rows(txt_token, txt_tokenUS) %>% View()
+  count(country, word) %>% View()
   group_by(country) %>% 
   mutate(proportion=n/sum(n)) %>% 
   select(-n) %>% 
@@ -169,7 +169,6 @@ ggplot(frequency, aes(x = proportion, y = `US_ndc`,
   facet_wrap(~country)+
   theme_light()+
   theme(legend.position = "none")+
-  
   labs(y="US_ndc", x=NULL)
 
 #correlation between words in different texts
