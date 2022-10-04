@@ -20,11 +20,12 @@ library(forcats)
 library(ggraph)
 library(igraph)
 library(cowplot)
+library(openxlsx)
 ```
 
 Reading and cleaning the NDC data, and cleaning it.
 
-Reading and cleaning the NDCs for G8 countries:
+Reading and cleaning the NDCs for Developed countries:
 
 Reading US NDC.
 
@@ -65,11 +66,11 @@ txt_USdf$text <- str_to_lower(txt_USdf$text)
 txt_USdf$country <- "US"
 
 #adding grouping column
-txt_USdf$grouping <- "G8"
+txt_USdf$grouping <- "Developed"
 
 ```
 
-Reading the NDC of France, italy and germany as EU. As all the Eu countries submitted a combined NDC under the EU banner:
+Reading the NDC of France, Italy and Germany as EU. As all the Eu countries submitted a combined NDC under the EU banner:
 
 ```{r, include=FALSE}
 #reading the NDC------------
@@ -108,7 +109,7 @@ txt_EUdf$text <- str_to_lower(txt_EUdf$text)
 txt_EUdf$country <- "EU"
 
 #adding grouping column
-txt_EUdf$grouping <- "G8"
+txt_EUdf$grouping <- "Developed"
 
 ```
 
@@ -155,7 +156,7 @@ txt_UKdf$text <- str_to_lower(txt_UKdf$text)
 txt_UKdf$country <- "UK"
 
 #adding grouping column
-txt_UKdf$grouping <- "G8"
+txt_UKdf$grouping <- "Developed"
 
 ```
 
@@ -201,7 +202,7 @@ txt_AUSdf$text <- str_to_lower(txt_AUSdf$text)
 txt_AUSdf$country <- "Australia"
 
 #adding grouping column
-txt_AUSdf$grouping <- "G8"
+txt_AUSdf$grouping <- "Developed"
 
 ```
 
@@ -244,7 +245,7 @@ txt_KORdf$text <- str_to_lower(txt_KORdf$text)
 txt_KORdf$country <- "South Korea"
 
 #adding grouping column
-txt_KORdf$grouping <- "G8"
+txt_KORdf$grouping <- "Developed"
 
 ```
 
@@ -287,7 +288,7 @@ txt_CANdf$text <- str_to_lower(txt_CANdf$text)
 txt_CANdf$country <- "Canada"
 
 #adding grouping column
-txt_CANdf$grouping <- "G8"
+txt_CANdf$grouping <- "Developed"
 
 ```
 
@@ -329,11 +330,11 @@ txt_JAPdf$text <- str_to_lower(txt_JAPdf$text)
 txt_JAPdf$country <- "Japan"
 
 #adding grouping column
-txt_JAPdf$grouping <- "G8"
+txt_JAPdf$grouping <- "Developed"
 
 ```
 
-Reading developing countries NDCs:
+Reading developing/G12 countries NDCs:
 
 Reading India's NDC.
 
@@ -376,7 +377,7 @@ txt_indiadf$text <- str_to_lower(txt_indiadf$text)
 txt_indiadf$country <- "India"
 
 #adding grouping column
-txt_indiadf$grouping <- "G20-G8"
+txt_indiadf$grouping <- "Developing/G12"
 
 ```
 
@@ -422,7 +423,7 @@ txt_BANdf$text <- str_to_lower(txt_BANdf$text)
 txt_BANdf$country <- "Bangladesh"
 
 #adding grouping column
-txt_BANdf$grouping <- "G20-G8"
+txt_BANdf$grouping <- "Developing/G12"
 
 ```
 
@@ -467,7 +468,7 @@ txt_BRAdf$text <- str_to_lower(txt_BRAdf$text)
 txt_BRAdf$country <- "Brazil"
 
 #adding grouping column
-txt_BRAdf$grouping <- "G20-G8"
+txt_BRAdf$grouping <- "Developing/G12"
 
 ```
 
@@ -513,7 +514,7 @@ txt_EGPdf$text <- str_to_lower(txt_EGPdf$text)
 txt_EGPdf$country <- "Egypt"
 
 #adding grouping column
-txt_EGPdf$grouping <- "G20-G8"
+txt_EGPdf$grouping <- "Developing/G12"
 
 ```
 
@@ -521,7 +522,7 @@ Reading Saudi Arabia's NDC.
 
 ```{r, include=FALSE}
 #reading the NDC------------
-txt_SUD <- pdf_text("Saudi_arabia_NDC 2021.pdf") %>% 
+txt_SUD <- pdf_text("Saudi_arabia_NDC 2021.pdf") %>%
   read_lines()
 
 str(txt_SUD)
@@ -530,26 +531,26 @@ str(txt_SUD)
 txt_SUDdf <- tibble(line=1:524, text=txt_SUD)
 
 #removing some rows
-txt_SUDdf <- txt_SUDdf[-c(1:15),] 
+txt_SUDdf <- txt_SUDdf[-c(1:15),]
 
 #adding NAs to the blank rows
 txt_SUDdf [txt_SUDdf ==""] <- NA
 
 #removing rows with NAs
-txt_SUDdf   <- txt_SUDdf  %>% 
+txt_SUDdf   <- txt_SUDdf  %>%
   na.omit()
 
 #removing rows with just numbers
-txt_SUDdf<- txt_SUDdf %>% 
+txt_SUDdf<- txt_SUDdf %>%
   filter(!grepl("\\d+$", text))
 
 #adding a column with index number
 txt_SUDdf$linenumber <- 1:nrow(txt_SUDdf)
 
 #moving the index number column to the start
-txt_SUDdf<- txt_SUDdf%>% 
-  select(-line) %>% 
-  relocate(linenumber, .before = text) 
+txt_SUDdf<- txt_SUDdf%>%
+  select(-line) %>%
+  relocate(linenumber, .before = text)
 
 #converting every letter to lower case
 txt_SUDdf$text <- str_to_lower(txt_SUDdf$text)
@@ -558,12 +559,13 @@ txt_SUDdf$text <- str_to_lower(txt_SUDdf$text)
 txt_SUDdf$country <- "Saudi Arabia"
 
 #adding grouping column
-txt_SUDdf$grouping <- "G20-G8"
+txt_SUDdf$grouping <- "Developed"
 
 
 ```
 
 Reading South Africa's NDC.
+
 
 ```{r, include=FALSE}
 #reading the NDC------------
@@ -604,7 +606,7 @@ txt_SAdf$text <- str_to_lower(txt_SAdf$text)
 txt_SAdf$country <- "South Africa"
 
 #adding grouping column
-txt_SAdf$grouping <- "G20-G8"
+txt_SAdf$grouping <- "Developing/G12"
 
 
 ```
@@ -650,7 +652,7 @@ txt_TURdf$text <- str_to_lower(txt_TURdf$text)
 txt_TURdf$country <- "Turkey"
 
 #adding grouping column
-txt_TURdf$grouping <- "G20-G8"
+txt_TURdf$grouping <- "Developing/G12"
 
 ```
 
@@ -695,7 +697,7 @@ txt_IDNdf$text <- str_to_lower(txt_IDNdf$text)
 txt_IDNdf$country <- "Indonesia"
 
 #adding grouping column
-txt_IDNdf$grouping <- "G20-G8"
+txt_IDNdf$grouping <- "Developing/G12"
 
 ```
 
@@ -704,8 +706,9 @@ Combining all the NDC data frames for G8 and G20 nations.
 
 ```{r, include=FALSE}
 
-combined_NDC <- rbind(txt_USdf, txt_EUdf, txt_UKdf, txt_AUSdf, txt_KORdf, txt_CANdf, txt_JAPdf,
-      txt_indiadf, txt_BANdf, txt_BRAdf, txt_EGPdf, txt_SUDdf, txt_SAdf, txt_TURdf, txt_IDNdf)
+combined_NDC <- rbind(txt_USdf, txt_EUdf, txt_UKdf, txt_AUSdf, txt_KORdf, txt_CANdf, txt_JAPdf, txt_SUDdf,
+      txt_indiadf, txt_BANdf, txt_BRAdf, txt_EGPdf,  txt_SAdf, txt_TURdf, txt_IDNdf)
+
 
 
 ```
@@ -775,6 +778,7 @@ combined_NDC %>%
   ggplot(aes(n, word,n, fill=grouping))+
   geom_col()+
   facet_wrap(~grouping, scales="free")+
+  theme(legend.position = "none")+
   scale_y_reordered() +
   labs(y=NULL)
 ```
@@ -824,22 +828,32 @@ token_combined <- combined_NDC %>%
   filter(!str_detect(word, "\\d")) %>% 
   count(grouping, word, sort=T)
 
+#token_combined %>% View()
+
 frequency_combined <- token_combined %>%
     group_by(grouping) %>% 
   mutate(proportion=n/sum(n)) %>% 
    select(-n) %>% 
   pivot_wider(names_from = grouping, values_from = proportion) %>% 
-   pivot_longer(`G8`,
+   pivot_longer(`Developed`,
                names_to = "country", values_to = "proportion")
 
-frequency_combined %>% View()
+#frequency_combined %>% View()
 
 
-ggplot(frequency_combined, aes(x = proportion, y = `G20-G8`,
-                      color=abs(`G20-G8`-proportion)))+
+word_subset <- c("capacity", "finance", "development","neutrality", "water",  "disaster",
+                 "parliament", "regulation",  "neutral", "legislation")
+
+freq_subset <- frequency_combined %>% 
+  filter(word%in%word_subset)
+
+ggplot(frequency_combined, aes(x = proportion, y = `Developing/G12`,
+                      color=abs(`Developing/G12`-proportion)))+
   geom_abline(color="gray40", lty=2)+
   geom_jitter(alpha=0.1, size=2.5, width=0.3, height=0.3)+
+  geom_point(data = freq_subset, color="red", size=2.5, width=0.3, height=0.3)+
   geom_text(aes(label=word), check_overlap = TRUE, vjust=1.5)+
+  geom_text(data = freq_subset, aes(label=word), color="red",vjust=1.5)+
   scale_x_log10(labels=percent_format())+
   scale_y_log10(labels=percent_format())+
   scale_color_gradient(limits=c(0,0.001),
@@ -848,18 +862,21 @@ ggplot(frequency_combined, aes(x = proportion, y = `G20-G8`,
   theme_light()+
   theme(legend.position = "none",
         strip.text=element_text(face="bold"))+
-  labs(y="G20-G8", x=NULL)
+  labs(y="Developing", x=NULL)
 
 ggsave("proportion_1gram.jpg", dpi = 300, height = 7, width = 10)
 
 
 ```
+
+
+
 correlation between words in different texts. 
 
 ```{r}
 #correlation between words in different texts
-cor.test(data=frequency_combined[frequency_combined$country=="G8",], 
-         ~ proportion + `G20-G8`)
+cor.test(data=frequency_combined[frequency_combined$country=="Developed",], 
+         ~ proportion + `Developing/G12`)
 ```
 
 #### Tokenizing by n-grams
@@ -900,13 +917,13 @@ bigram_united %>%
   count(grouping, bigram, sort=T)
 ```
 ```{r}
-bigram_united%>% View()
+bigram_united%>% 
   count(grouping, bigram, sort=T) %>% 
   group_by(grouping) %>%
   slice_max(n, n=30) %>%
   ungroup() %>% 
   mutate(grouping=as.factor(grouping),
-         bigram=reorder_within(bigram, n, grouping)) %>% 
+         bigram=reorder_within(bigram, n, grouping)) %>%
   ggplot(aes(n, bigram,n, fill=grouping))+
   geom_col()+
   facet_wrap(~grouping, scales="free")+
@@ -917,6 +934,8 @@ bigram_united%>% View()
   labs(y=NULL)
 
 #ggsave("bigram_text.png", dpi = 300, height = 8, width = 10)
+ 
+ #write.xlsx(xx, "bigrams.xlsx")
 ```
 
 tf-idf for the bigrams.
@@ -946,12 +965,12 @@ frequency_bigram <- bigram_united %>%
   mutate(proportion=n/sum(n)) %>% 
   select(-n) %>% 
   pivot_wider(names_from = grouping, values_from = proportion) %>% 
-  pivot_longer(`G8`,
+  pivot_longer(`Developed`,
                names_to = "country", values_to = "proportion")
 
 
-ggplot(frequency_bigram, aes(x = proportion, y = `G20-G8`,
-                      color=abs(`G20-G8`-proportion)))+
+ggplot(frequency_bigram, aes(x = proportion, y = `Developing/G12`,
+                      color=abs(`Developing/G12`-proportion)))+
   geom_abline(color="gray40", lty=2)+
   geom_jitter(alpha=0.1, size=2.5, width=0.3, height=0.3)+
   geom_text(aes(label=bigram), check_overlap = TRUE, vjust=1.5)+
@@ -962,7 +981,7 @@ ggplot(frequency_bigram, aes(x = proportion, y = `G20-G8`,
   facet_wrap(~country)+
   theme_light()+
   theme(legend.position = "none")+
-  labs(y="G20-G8", x=NULL)
+  labs(y="Developing/G12", x=NULL)
 
 ```
 
@@ -973,11 +992,11 @@ bigram_count <- bigram_filtered %>%
   count(grouping, word1, word2, sort = TRUE)
 
 bigram_count_g8 <- bigram_count %>% 
-  filter(grouping=="G8") %>% 
+  filter(grouping=="Developed") %>% 
   select(-grouping)
 
 bigram_count_g20_g8 <- bigram_count %>% 
-  filter(grouping=="G20-G8") %>% 
+  filter(grouping=="Developing/G12") %>% 
    select(-grouping)
 
 #filter for relatively common combinations for g8
@@ -1007,7 +1026,6 @@ ggraph(bigram_graph_g20_g8, layout = "fr") +
   geom_node_text(aes(label = name), vjust = 1, hjust = 1)
 ```
 Lets look at G20-G8 network plot.
-
 
 
 ```{r}
@@ -1053,10 +1071,10 @@ network_g8
 ggsave("network_g8.png", dpi = 300, height = 8, width = 12, bg = "white")
 ```
 ```{r}
-plot_grid(network_g8, network_g20_g8, labels = c('G8', 'G20-G8'), label_size = 16, scale = 0.95, label_colour = "Black")
+plot_grid(network_g8, network_g20_g8, labels = c('Developed', 'Developing/G12'), label_size = 16, scale = 0.95, label_colour = "Black")
 
 
-ggsave("network_combined.png", dpi = 300, height = 8, width = 16, bg = "white")
+#ggsave("network_combined.png", dpi = 300, height = 8, width = 16, bg = "white")
 ```
 
 
@@ -1098,13 +1116,14 @@ trigram_united %>%
 trigram_united%>% 
   count(grouping, trigram, sort=T) %>% 
   group_by(grouping) %>%
-  slice_max(n, n=40) %>%
+  slice_max(n, n=30) %>%
   ungroup() %>% 
   mutate(grouping=as.factor(grouping),
          trigram=reorder_within(trigram, n, grouping)) %>% 
   ggplot(aes(n, trigram,n, fill=grouping))+
   geom_col()+
   facet_wrap(~grouping, scales="free")+
+  theme(legend.position = "none")+
   scale_y_reordered() +
   labs(y=NULL)
 ```
